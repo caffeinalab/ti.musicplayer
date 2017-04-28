@@ -2,11 +2,9 @@
 
 ### com.caffeinalab.titanium.musicplayer
 
-A simple **Sharing** widget heavy inspired to **AirBnb**, with default drivers and the ability to add custom drivers to share.
+A simple **Music player** widget
 
-The widget use [Trimethyl.Share](https://github.com/CaffeinaLab/Trimethyl), so you **must** install Trimethyl to use it, or define your own custom drivers.
-
-![](http://cl.ly/image/0i092a3w2L1H/687474703a2f2f662e636c2e6c792f6974656d732f3365306e337132723059316f31673372334b30432f494d475f313138342e504e47_iphone5c_yellow_portrait.png)
+The widget uses [Trimethyl](https://github.com/CaffeinaLab/Trimethyl), so you **must** install Trimethyl to use it, or define your own custom drivers.
 
 ## Installation
 
@@ -31,11 +29,11 @@ Download the latest release, unzip in `app/widgets` and add in your *config.json
 ```javascript
 var mp = Alloy.createWidget('com.caffeinalab.titanium.musicPlayer');
 mp.play({
-	id: "",
-	url: 'http://google.com',
-	cover: "http://google.com",
-	artist: "",
-	album: "",
+    id: "",
+    url: 'http://google.com',
+    cover: "http://google.com",
+    artist: "",
+    album: "",
     track: 1
 });
 ```
