@@ -1,0 +1,16 @@
+<Alloy>
+	<View id="music_player">
+		<View id="border">
+			<View id="progressbar" />
+		</View>
+		<View class="horizontalContainer">
+			<View class="labelsContainer">
+				<Label class="track" id="track"/>
+				<Label class="title" id="title"/>
+			</View>
+			<View class="control">
+				<ImageView class="controlLabel" id="playBtn"/>
+			</View>
+		</View>
+	</View>
+</Alloy>

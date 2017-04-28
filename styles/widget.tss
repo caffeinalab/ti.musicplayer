@@ -1,0 +1,71 @@
+"#music_player": {
+	height: 0,
+	bottom: 50,
+	backgroundColor: "#1b1b1b",
+	width: Alloy.Globals.SCREEN_WIDTH
+},
+".horizontalContainer": {
+	width: Ti.UI.FILL,
+	width: Ti.UI.FILL
+},
+".control": {
+	width: 40,
+	height: Ti.UI.FILL,
+	right: 8
+},
+".labelsContainer": {
+	layout: "vertical",
+	right: 3,
+	height: Ti.UI.FILL,
+	left: 8,
+	width: "75%"
+},
+".track": {
+	left: 0,
+	top: 8,
+	bottom: 0,
+	wordWrap: false,
+	width: Ti.UI.FILL,
+	height: 24,
+	color: "#fff",
+	opacity: 0.3,
+	font: {
+		fontFamily: "BrandonGrotesque-Regular",
+		fontSize: 20
+	},
+	verticalAlign: Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
+	textAlign: Ti.UI.TEXT_ALIGNMENT_LEFT
+},
+".title": {
+	left: 0,
+	top: 0,
+	bottom: 5,
+	wordWrap: false,
+	width: Ti.UI.FILL,
+	height: 30,
+	color: "#fff",
+	font: {
+		fontFamily: "BrandonGrotesque-Regular",
+		fontSize: 20
+	},
+	verticalAlign: Ti.UI.TEXT_VERTICAL_ALIGNMENT_TOP,
+	textAlign: Ti.UI.TEXT_ALIGNMENT_LEFT
+},
+"#border": {
+	height: 3,
+	width: Ti.UI.FILL,
+	backgroundColor: "#3FFF",
+	top: 0
+},
+"#progressbar": {
+	width: 0,
+	height: Ti.UI.FILL,
+	backgroundColor: "#fff",
+	opacity: 0.8,
+	left: 0
+},
+"#playBtn": {
+	width: 35,
+	height: 35,
+	image: WPATH("/images/play.png")
+}
