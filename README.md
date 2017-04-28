@@ -6,6 +6,8 @@ A simple **Music player** widget
 
 The widget uses [Trimethyl](https://github.com/CaffeinaLab/Trimethyl), so you **must** install Trimethyl to use it, or define your own custom drivers.
 
+![image](https://cl.ly/3U2p0c3i0g3s/Image%202017-04-28%20at%204.58.55%20PM.png)
+
 ## Installation
 
 #### Via Gittio
