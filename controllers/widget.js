@@ -38,6 +38,8 @@ if (Alloy.Globals.__comcaffeinatitaniummusicplayer) {
 Alloy.Globals.__comcaffeinatitaniummusicplayer = $;
 
 function init() {
+	if ($.music_player.height != 0) return;
+	$.music_player.height = height;
 	if (aoNull()) return;
 	if ($.ao.title != $.title.text) {
 		$.title.text = $.ao.title || "";
@@ -57,7 +59,7 @@ function init() {
 
 function aoNull() {
 	return Object.getOwnPropertyNames($.ao).length == 0;
-} 
+}
 
 getLocalCoverName = function() {
 	return Ti.Utils.md5HexDigest($.ao.cover) + $.ao.cover.match(/\.\w+$/).pop();
@@ -102,15 +104,15 @@ function remoteControlsHandler(e) {
 			break;
 		case nowPlaying.STOP:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			$.cleanup();
+			//$.cleanup();
 			break;
 		case nowPlaying.NEXT:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			$.cleanup();
+			//$.cleanup();
 			break;
 		case nowPlaying.PREV:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			$.cleanup();
+			//$.cleanup();
 			break;
 	}
 }
@@ -149,7 +151,7 @@ function stop() {
 function toggleMusic() {
 	if (aoNull()) return;
 	if ($.ap.playing) return $.ap.pause();
-	if ($.ap.getUrl() == $.ao.url) return $.ap.play();
+	if ($.ap.getUrl() && $.ap.getUrl().match(/\w+\.\w+$/).pop() == $.ao.url.match(/\w+\.\w+$/).pop()) return $.ap.play();
 
 	$.ap.setUrl($.ao.url);
 	$.ap.play();
@@ -174,8 +176,8 @@ Listeners
 */
 
 $.playBtn.addEventListener("click", function() {
-	if ($.ap.playing) $.pause();
-	else $.play();
+	if ($.ap.playing) Event.trigger(E_PREF + EVENTS[1], _.extend($.ao));
+	else Event.trigger(E_PREF + EVENTS[0], _.extend($.ao));
 });
 
 /*
@@ -234,12 +236,11 @@ $.stop = function(e) {
  * @param  {Object} audioObject
  */
 $.progress = function(e) {
-	init();
-
 	$.playBtn.image = WPATH("/images/pause.png");
 	$.progressbar.width = $.ao.percentage + "%";
 	if ($.ao.percentage > 98) $.stop({__through_event: true});
 	$.ao.__through_event = false;
+	init();
 };
 
 $.stopall = function() {
@@ -259,9 +260,21 @@ $.cleanup = function() {
 			Event.off(E_PREF + k, LISTENERS[E_PREF + k]);
 		}
 	});
+
+	LISTENERS	= {};
+	E_Bounce 	= [];
 };
 
-(function setListeners() {
+$.show = function() {
+	$.music_player.bottom = args.bottom || 0;
+};
+
+$.hide = function() {
+	$.music_player.bottom = -Alloy.Globals.SCREEN_HEIGHT;
+};
+
+$.setListeners = function() {
+	if(Object.getOwnPropertyNames(LISTENERS).length > 0) return;
 	EVENTS.forEach(function(k) {
 		var functions = Object.getOwnPropertyNames($).filter(function(k) { 
 			return _.isFunction($[k]);
@@ -273,4 +286,6 @@ $.cleanup = function() {
 			Event.on(E_PREF + k, LISTENERS[E_PREF + k]);
 		}
 	});
-})();
+};
+
+$.setListeners();

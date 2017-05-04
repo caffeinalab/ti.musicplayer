@@ -1,6 +1,5 @@
 "#music_player": {
 	height: 0,
-	bottom: 50,
 	backgroundColor: "#1b1b1b",
 	width: Alloy.Globals.SCREEN_WIDTH
 },
