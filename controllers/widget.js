@@ -104,15 +104,12 @@ function remoteControlsHandler(e) {
 			break;
 		case nowPlaying.STOP:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			//$.cleanup();
 			break;
 		case nowPlaying.NEXT:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			//$.cleanup();
 			break;
 		case nowPlaying.PREV:
 			Event.trigger("musicplayer.stopall",{__through_event: true});
-			//$.cleanup();
 			break;
 	}
 }
@@ -159,6 +156,7 @@ function toggleMusic() {
 }
 
 function progressToPercent(progress) {
+	if (!$.ap || $.ap.duration === 0) return 0;
 	return (progress/$.ap.duration) * 100;
 }
 
@@ -197,6 +195,7 @@ $.play = function(audioObject) {
 		$.ao = audioObject;
 		init();
 	}
+	
 	$.playBtn.image = WPATH("/images/pause.png");
 	if (!audioObject || !audioObject.__through_event) Event.trigger(E_PREF + EVENTS[0], $.ao);
 	toggleMusic();
@@ -240,6 +239,7 @@ $.progress = function(e) {
 	$.progressbar.width = $.ao.percentage + "%";
 	if ($.ao.percentage > 98) $.stop({__through_event: true});
 	$.ao.__through_event = false;
+
 	init();
 };
 
