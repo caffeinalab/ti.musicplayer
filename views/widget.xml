@@ -5,8 +5,8 @@
 		</View>
 		<View class="horizontalContainer">
 			<View class="labelsContainer">
-				<Label class="track" id="track"/>
-				<Label class="title" id="title"/>
+				<Label class="track" id="lbltrack"/>
+				<Label class="title" id="lbltitle"/>
 			</View>
 			<View class="control">
 				<ImageView class="controlLabel" id="playBtn"/>

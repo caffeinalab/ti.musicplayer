@@ -1,94 +1,61 @@
 var WNAME = 'com.caffeinalab.titanium.musicplayer';
-if (Ti.Trimethyl == null) {
-	Ti.API.warn(WNAME + ': This widget requires Trimethyl to be installed (https://github.com/CaffeinaLab/Trimethyl)');
-}
-
-if (Event == null || !(Event instanceof Backbone.Events)) {
-	var Event = require('T/event');
-}
 
 /*
 Pragma private
 */
 
-Titanium.Media.audioSessionCategory = Titanium.Media.AUDIO_SESSION_CATEGORY_PLAYBACK;
-
 var args 		= arguments[0] || {};
-var nowPlaying 	= OS_IOS ? Util.requireOrNull('com.guidolim.TiNowPlaying') : null;
+var nowPlaying = OS_IOS ? Util.requireOrNull('com.guidolim.TiNowPlaying') : null;
 var EVENTS 		= ["play", "pause", "stop", "stopped", "progress", "stopall"];
 var LISTENERS	= {};
 var E_Bounce 	= [];
 var E_PREF 		= "musicplayer.";
 var height 		= 70;
-var apHasListener = false;
-$.ao 			= {};
-$.ap 			= {};
+var ap_has_listener = false;
 
-if (Alloy.Globals.__comcaffeinatitaniummusicplayer) {
-	$.ap = Alloy.Globals.__comcaffeinatitaniummusicplayer.ap;
-	$.ao = Alloy.Globals.__comcaffeinatitaniummusicplayer.ao;
-	Alloy.Globals.__comcaffeinatitaniummusicplayer.cleanup();
-	$.ap.addEventListener("progress", audioProgressHandler);
-	apHasListener = true;
-} else {
-	$.ap 			= Ti.Media.createAudioPlayer({
-		allowBackgroud: true
-	});
-}
-Alloy.Globals.__comcaffeinatitaniummusicplayer = $;
+Titanium.Media.audioSessionCategory = Titanium.Media.AUDIO_SESSION_CATEGORY_PLAYBACK;
 
-function init() {
-	if ($.music_player.height != 0) return;
-	$.music_player.height = height;
-	if (aoNull()) return;
-	if ($.ao.title != $.title.text) {
-		$.title.text = $.ao.title || "";
-		$.title.text = $.title.text.toUpperCase();
-	}
-	if ($.ao.artist != $.track.text) {
-		$.track.text = $.ao.artist ? $.ao.artist : (L("track") + " " + $.ao.index).toUpperCase();
-		$.track.text = $.track.text.toUpperCase();
-	}
+$.playlist = [];
+$.playlistIndex = 0;
+$.track = null;
+$.playing = false;
+$.audioPlayer = {};
 
-	$.music_player.height = height;
-	if (!apHasListener) {
-		apHasListener = true;
-		$.ap.addEventListener("progress", audioProgressHandler);
-	}
+function getLocalCoverName() {
+	return Ti.Utils.md5HexDigest($.track.cover) + $.track.cover.match(/\.\w+$/).pop();
 }
 
-function aoNull() {
-	return Object.getOwnPropertyNames($.ao).length == 0;
-}
-
-getLocalCoverName = function() {
-	return Ti.Utils.md5HexDigest($.ao.cover) + $.ao.cover.match(/\.\w+$/).pop();
-};
-getLocalCover = function() {
+function getLocalCover() {
 	return Ti.Filesystem.getFile(getLocalDir().resolve(), getLocalCoverName());
-};
-getLocalDir = function() {
+}
+
+function getLocalDir() {
 	var dir = Ti.Filesystem.getFile(Util.getAppDataDirectory(), 'audio');
 	if (!dir.exists()) dir.createDirectory();
 	return dir;
-};
-downloadCover = function(progressHandler) {
+}
+
+function downloadCover(progressHandler) {
 	return Q.promise(function(resolve, reject) {
 		if (isDownloadedCover()) return resolve();
-		HTTP.download($.ao.cover, getLocalCover(), resolve, reject, progressHandler);
+		HTTP.download($.track.cover, getLocalCover(), resolve, reject, progressHandler);
 	});
-};
-isDownloadedCover = function() {
+}
+
+function isDownloadedCover() {
 	return getLocalCover().exists();
-};
-getCover = function() {
-	if (!isDownloadedCover()) return $.ao.cover;
+}
+
+function getCover() {
+	if (!isDownloadedCover()) return $.track.cover;
 	else return getLocalCover().resolve();
-};
-getCoverNativePath = function() {
+}
+
+function getCoverNativePath() {
 	if (!isDownloadedCover()) return false;
 	else return getLocalCover().nativePath;
-};
+}
+
 
 //////////////
 // Handlers //
@@ -97,86 +64,152 @@ getCoverNativePath = function() {
 function remoteControlsHandler(e) {
 	switch (e.action) {
 		case nowPlaying.PLAY:
-			Event.trigger("musicplayer.play", _.extend($.ao), {__through_event: true});
-			break;
+		$.play();
+		break;
 		case nowPlaying.PAUSE:
-			$.pause();
-			break;
+		$.pause();
+		break;
 		case nowPlaying.STOP:
-			Event.trigger("musicplayer.stopall",{__through_event: true});
-			break;
+		$.stop();
+		break;
 		case nowPlaying.NEXT:
-			Event.trigger("musicplayer.stopall",{__through_event: true});
-			break;
+		$.next();
+		break;
 		case nowPlaying.PREV:
-			Event.trigger("musicplayer.stopall",{__through_event: true});
-			break;
+		$.prev();
+		break;
+	}
+}
+
+function setUI() {
+	// Update our UI strings
+	if ($.track == null) {
+		$.lbltitle.text = "";
+		$.lbltrack.text = "";
+	} else {
+		if ($.track.title != $.lbltitle.text) {
+			$.lbltitle.text = ($.track.title || "").toUpperCase();
+		}
+		if ($.track.artist != $.lbltrack.text) {
+			$.lbltrack.text = ($.track.artist ? $.track.artist : (L("track") + " " + $.track.index)).toUpperCase();
+		}
+	}
+
+	// Update our UI
+	if ($.track == null) {
+		$.music_player.height = 0;
+	} else {
+		$.music_player.height = height;
+	}
+
+	if ($.playing) {
+		$.playBtn.image = WPATH("/images/pause.png");
+	} else {
+		$.playBtn.image = WPATH("/images/play.png");
 	}
 }
 
 function setInfo() {
-	if (!nowPlaying) return;
-	if (aoNull()) return;
+	// Set url for Player
+	if ($.track != null) {
+		$.audioPlayer.stop(); // we call stop only because otherwise we got errors!!
+		$.audioPlayer.setUrl($.track.url);
+	}
 
-	downloadCover()
-	.then(function() {		
-		nowPlaying.setInfo({
-		  artistName: $.ao.artist,
-		  songTitle: $.ao.title,
-		  albumTitle: $.ao.album,
-		  albumCover: getCoverNativePath()
-		});
-		nowPlaying.addEventListener("RemoteControl", remoteControlsHandler);
-	});
-}
-
-function clearInfo() {
-	if (!nowPlaying) return;
-
-	nowPlaying.clear();
+	// Update Music player info
+	if (nowPlaying) {
+		if ($.track == null) {
+			nowPlaying.clear();
+		} else {
+			downloadCover()
+			.then(function() {		
+				nowPlaying.setInfo({
+					artistName: $.track.artist,
+					songTitle: $.track.title,
+					albumTitle: $.track.album,
+					albumCover: getCoverNativePath()
+				});
+			});
+		}
+	}
 }
 
 function stop() {
-	if ($.ap.playing || $.ap.paused)
-    {
-		$.playBtn.image = WPATH("/images/play.png");
-        $.ap.stop();
-        if (OS_ANDROID) $.ap.release();
-    }
+	if (!$.playing) return;
+	$.playing = false;
+	$.audioPlayer.stop();
+	if (OS_ANDROID) $.audioPlayer.release();
+	$.trigger("stop");
+	$.playBtn.image = WPATH("/images/play.png");
 }
 
-function toggleMusic() {
-	if (aoNull()) return;
-	if ($.ap.playing) return $.ap.pause();
-	if ($.ap.getUrl() && $.ap.getUrl().match(/\w+\.\w+$/).pop() == $.ao.url.match(/\w+\.\w+$/).pop()) return $.ap.play();
+function play() {
+	if ($.track == null) {
+		return Ti.API.warn(WNAME, "Song not set");
+	}
 
-	$.ap.setUrl($.ao.url);
-	$.ap.play();
-	setInfo();
+	$.playing = true;
+	$.audioPlayer.play();
+	$.trigger("play", $.track);
+	$.playBtn.image = WPATH("/images/pause.png");
+}
+
+function pause() {
+	if (!$.playing) return;
+	$.playing = false;
+	$.audioPlayer.pause();
+	$.trigger("pause", $.track);
+	$.playBtn.image = WPATH("/images/play.png");
+}
+
+function toggle() {
+	if ($.playing) {
+		pause();
+	} else {
+		play();
+	}
 }
 
 function progressToPercent(progress) {
-	if (!$.ap || $.ap.duration === 0) return 0;
-	return (progress/$.ap.duration) * 100;
+	if (!$.audioPlayer || $.audioPlayer.duration === 0) return 0;
+	return (progress / $.audioPlayer.duration) * 100;
 }
 
 function audioProgressHandler(e) {
-	$.ao = _.extend($.ao, {
+	if ($.track == null) return;
+
+	$.track = _.extend($.track, {
 		percentage: progressToPercent(e.progress),
 		progress: e.progress,
-		new: e.url == $.ao.url
+		new: e.url == $.track.url
 	});
-	Event.trigger(E_PREF + EVENTS[4], $.ao);
+
+	$.progressbar.width = $.track.percentage + "%";
+	if ($.track.percentage > 98) $.stop();
+
+	$.trigger("progress", $.track);
 }
+
+// function setListeners() {
+// 	if(Object.getOwnPropertyNames(LISTENERS).length > 0) return;
+// 	EVENTS.forEach(function(k) {
+// 		var functions = Object.getOwnPropertyNames($).filter(function(k) { 
+// 			return _.isFunction($[k]);
+// 		});
+// 		if (functions.indexOf(k) != -1) {
+// 			LISTENERS[k] = function(e) {
+// 				if (_.isFunction($[k])) $[k](_.extend(e, {__through_event: true}));
+// 			};
+// 			$.on(k, LISTENERS[k]);
+// 		}
+// 	});
+// }
 
 /*
 Listeners
 */
 
-$.playBtn.addEventListener("click", function() {
-	if ($.ap.playing) Event.trigger(E_PREF + EVENTS[1], _.extend($.ao));
-	else Event.trigger(E_PREF + EVENTS[0], _.extend($.ao));
-});
+$.playBtn.addEventListener("click", function(){ $.toggle(); });
 
 /*
 Pragma public
@@ -184,85 +217,79 @@ Pragma public
 
 /**
  * @method play
- * audio object
- * @param  {Object} audioObject
  */
-$.play = function(audioObject) {
-	if (!audioObject && aoNull()) return Ti.API.warn("Called play without an audioObject");
-
-	if (audioObject != null && (audioObject.url != $.ao.url)) {
-		Event.trigger(E_PREF + EVENTS[5], {});
-		$.ao = audioObject;
-		init();
-	}
-	
-	$.playBtn.image = WPATH("/images/pause.png");
-	if (!audioObject || !audioObject.__through_event) Event.trigger(E_PREF + EVENTS[0], $.ao);
-	toggleMusic();
-};
+$.play = play;
 
 /**
  * @method pause
- * audio object
- * @param  {Object} audioObject
  */
-$.pause = function(e) {
-	if ($.ap && $.ap.paused) return;
-	$.playBtn.image = WPATH("/images/play.png");
-	if (!e || !e.__through_event) Event.trigger(E_PREF + EVENTS[1], $.ao);
-	else toggleMusic();
+$.pause = pause;
+
+/**
+ * @method toggle
+ */
+$.toggle = toggle;
+
+/**
+ * @method next
+ */
+$.next = function() {
+	var playMode = $.getPlayMode();
+	if (playMode === 'PLAYLIST') {
+		$.playlistIndex++;
+		if ($.playlistIndex >= $.playlist.length-1) {
+			$.playlistIndex = 0;
+			$.stop();
+		} else {
+			$.setTrack($.playlist[ $.playlistIndex ]);
+		}
+	} else if (playMode === 'SONG') {
+		$.stop();
+	}
+
+	// If the player is playing, keep playing
+	if ($.playing) {
+		$.play();
+	}
+};
+
+/**
+ * @method prev
+ */
+$.prev = function() {
+	var playMode = $.getPlayMode();
+	if (playMode === 'PLAYLIST') {
+		$.playlistIndex--;
+		if ($.playlistIndex < 0) {
+			$.playlistIndex = 0;
+			$.stop();
+		} else {
+			$.setTrack($.playlist[ $.playlistIndex ]);
+		}
+	} else if (playMode === 'SONG') {
+		$.stop();
+	}
+
+	// If the player is playing, keep playing
+	if ($.playing) {
+		$.play();
+	}
 };
 
 /**
  * @method stop
- * audio object
- * @param  {Object} audioObject
  */
-$.stop = function(e) {
+$.stop = function() {
 	$.playBtn.image = WPATH("/images/play.png");
 	$.music_player.height = 0;
-	if (!e || !e.__through_event) {
-		Event.trigger(E_PREF + EVENTS[2], $.ao);
-		$.cleanup();
-	}
-	clearInfo();
+	$.track = null;
+	setUI();
+	setInfo();
 	stop();
 };
 
-/**
- * @method progress
- * audio object
- * @param  {Object} audioObject
- */
-$.progress = function(e) {
-	$.playBtn.image = WPATH("/images/pause.png");
-	$.progressbar.width = $.ao.percentage + "%";
-	if ($.ao.percentage > 98) $.stop({__through_event: true});
-	$.ao.__through_event = false;
-
-	init();
-};
-
-$.stopall = function() {
-	return $.stop({__through_event: true});
-};
-
-/**
- * @method cleanup removes all listeners and cleans memory
- */
 $.cleanup = function() {
-	$.ap.removeEventListener("progress", audioProgressHandler);
-	EVENTS.forEach(function(k) {
-		var functions = Object.getOwnPropertyNames($).filter(function(k) { 
-			return _.isFunction($[k]);
-		});
-		if (functions.indexOf(k)) {
-			Event.off(E_PREF + k, LISTENERS[E_PREF + k]);
-		}
-	});
-
-	LISTENERS	= {};
-	E_Bounce 	= [];
+	$.audioPlayer.removeEventListener("progress", audioProgressHandler);
 };
 
 $.show = function() {
@@ -273,19 +300,46 @@ $.hide = function() {
 	$.music_player.bottom = -Alloy.Globals.SCREEN_HEIGHT;
 };
 
-$.setListeners = function() {
-	if(Object.getOwnPropertyNames(LISTENERS).length > 0) return;
-	EVENTS.forEach(function(k) {
-		var functions = Object.getOwnPropertyNames($).filter(function(k) { 
-			return _.isFunction($[k]);
-		});
-		if (functions.indexOf(k) != -1) {
-			LISTENERS[E_PREF + k] = function(e) {
-				if (_.isFunction($[k])) $[k](_.extend(e, {__through_event: true}));
-			};
-			Event.on(E_PREF + k, LISTENERS[E_PREF + k]);
-		}
-	});
+$.setPlaylistIndex = function(idx) {
+	$.playlistIndex = idx;
+	$.setTrack($.playlist[ $.playlistIndex ]);
 };
 
-$.setListeners();
+$.setPlaylist = function(playlist) {
+	$.playlist = playlist;
+};
+
+$.deletePlaylist = function() {
+	$.playlist = null;
+};
+
+$.setTrack = function(obj) {
+	$.track = obj;
+	Ti.API.debug(WNAME, 'new track', obj);
+	setUI();
+	setInfo();
+};
+
+$.getPlayMode = function() {
+	return _.isEmpty($.playlist) ? 'SONG' : 'PLAYLIST';
+};
+
+if (nowPlaying != null) {
+	nowPlaying.addEventListener("RemoteControl", remoteControlsHandler);
+}
+
+if (Alloy.Globals.__comcaffeinatitaniummusicplayer) {
+	['audioPlayer', 'track', 'playing', 'playlist', 'playlistIndex'].forEach(function(k) {
+		$[k] = Alloy.Globals.__comcaffeinatitaniummusicplayer[k];
+	});
+	Alloy.Globals.__comcaffeinatitaniummusicplayer.cleanup();
+} else {
+	$.audioPlayer = Ti.Media.createAudioPlayer({
+		allowBackground: true
+	});
+}
+
+$.audioPlayer.addEventListener("progress", audioProgressHandler);
+setUI();
+
+Alloy.Globals.__comcaffeinatitaniummusicplayer = $;

@@ -3,7 +3,7 @@
 	"name": "Ti.MusicPlayer",
 	"description" : "Simple widget with music controls",
 	"author": "Ani Sinanaj",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"copyright":"Copyright (c) 2017",
 	"license":"Apache License, Version 2.0",
 	"min-alloy-version": "1.0",

@@ -2,9 +2,7 @@
 
 ### com.caffeinalab.titanium.musicplayer
 
-A simple **Music player** widget
-
-The widget uses [Trimethyl](https://github.com/CaffeinaLab/Trimethyl), so you **must** install Trimethyl to use it, or define your own custom drivers.
+A simple **Music player** widget.
 
 ![image](https://cl.ly/3U2p0c3i0g3s/Image%202017-04-28%20at%204.58.55%20PM.png)
 
@@ -29,29 +27,33 @@ Download the latest release, unzip in `app/widgets` and add in your *config.json
 ## Usage
 
 ```javascript
-var mp = Alloy.createWidget('com.caffeinalab.titanium.musicPlayer');
-mp.play({
+var mp = Alloy.createWidget('com.caffeinalab.titanium.musicplayer');
+mp.setPlaylist([{
     id: "",
     url: 'http://google.com',
     cover: "http://google.com",
     artist: "",
     album: "",
     track: 1
-});
+}]);
+mp.setPlaylistIndex(0);
+mp.play()
 ```
 
 ## API
 
-#### `play(audioObject) `
-
-The `audioObject` object
+The `Track` object is:
 
 * `id`: Usually the model id but can be whatever you want. It is not used internally but it is recommended.
 * `url`: The link to the audio.
 * `cover`: Link to the cover image.
 * `artist`: The artist of the sound track.
 * `album`: The album where the sound track is featured.
-* `track`: Track index
+* `index`: Track index
+
+#### `play() `
+
+Play current track.
 
 #### `stop()`
 
@@ -61,36 +63,48 @@ Stops the currently playing audio and releases the memory.
 
 Pauses the currently playing audio.
 
+#### `setPlaylist(Track[])`
+
+Set the playlist to use in the player.
+
+#### `setPlaylistIndex(Number)`
+
+Set the current index track in the playlist
+
+#### `deletePlaylist`
+
+Delete the current playlist. You can use `setTrack` to set a single track to play.
+
+#### `setTrack(Track)`
+
+Override the current track.
+
 ## Events
 
-#### `musicplayer.play`
+#### `play`
 
 Fired when the play function is called either from the widget's UI or programmatically
 
 Passed arguments:
 
-* `audioObject`
+* `Track`
 
-#### `musicplayer.pause`
+#### `pause`
 
 Fired when the pause function is called either from the widget's UI or programmatically
 
 Passed arguments:
 
-* `audioObject`
+* `Track`
 
-#### `musicplayer.stop`
+#### `stop`
 
 Fired when internally when the music reaches the end or when the stop function is called programmatically
 
-Passed arguments:
-
-* `audioObject`
-
-#### `musicplayer.progress`
+#### `progress`
 
 Fired continuously while the music is playing.
 
 Passed arguments:
 
-* `audioObject`
+* `Track`

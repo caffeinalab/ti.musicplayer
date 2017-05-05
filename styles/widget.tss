@@ -30,7 +30,7 @@
 	opacity: 0.3,
 	font: {
 		fontFamily: "BrandonGrotesque-Regular",
-		fontSize: 20
+		fontSize: 16
 	},
 	verticalAlign: Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
 	textAlign: Ti.UI.TEXT_ALIGNMENT_LEFT
@@ -45,7 +45,7 @@
 	color: "#fff",
 	font: {
 		fontFamily: "BrandonGrotesque-Regular",
-		fontSize: 20
+		fontSize: 16
 	},
 	verticalAlign: Ti.UI.TEXT_VERTICAL_ALIGNMENT_TOP,
 	textAlign: Ti.UI.TEXT_ALIGNMENT_LEFT
