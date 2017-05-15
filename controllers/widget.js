@@ -301,7 +301,7 @@ $.hide = function() {
 };
 
 $.setPlaylistIndex = function(idx) {
-	if (idx == $.playlistIndex) return;
+	if (idx == $.playlistIndex && $.track != null) return;
 	$.playlistIndex = idx;
 	$.setTrack($.playlist[ $.playlistIndex ]);
 };
