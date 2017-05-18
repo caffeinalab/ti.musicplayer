@@ -112,8 +112,7 @@ function setUI() {
 function setInfo() {
 	// Set url for Player
 	if ($.track != null) {
-		$.audioPlayer.stop(); // we call stop only because otherwise we got errors!!
-		$.audioPlayer.setUrl($.track.url);
+		Event.trigger("musicplayer.seturl", $.track.url);
 	}
 
 	// Update Music player info
@@ -137,8 +136,7 @@ function setInfo() {
 function stop() {
 	if (!$.playing) return;
 	$.playing = false;
-	$.audioPlayer.stop();
-	if (OS_ANDROID) $.audioPlayer.release();
+	Event.trigger("musicplayer.stop", {});
 	$.trigger("stop");
 	$.playBtn.image = WPATH("/images/play.png");
 }
@@ -149,7 +147,7 @@ function play() {
 	}
 
 	$.playing = true;
-	$.audioPlayer.play();
+	Event.trigger("musicplayer.play", {});
 	$.trigger("play", $.track);
 	$.playBtn.image = WPATH("/images/pause.png");
 }
@@ -157,7 +155,7 @@ function play() {
 function pause() {
 	if (!$.playing) return;
 	$.playing = false;
-	$.audioPlayer.pause();
+	Event.trigger("musicplayer.pause", {});
 	$.trigger("pause", $.track);
 	$.playBtn.image = WPATH("/images/play.png");
 }
@@ -170,16 +168,16 @@ function toggle() {
 	}
 }
 
-function progressToPercent(progress) {
-	if (!$.audioPlayer || $.audioPlayer.duration === 0) return 0;
-	return (progress / $.audioPlayer.duration) * 100;
+function progressToPercent(progress, duration) {
+	if (duration === 0) return 0;
+	return (progress / duration) * 100;
 }
 
 function audioProgressHandler(e) {
 	if ($.track == null) return;
 
 	$.track = _.extend($.track, {
-		percentage: progressToPercent(e.progress),
+		percentage: progressToPercent(e.progress, e.duration),
 		progress: e.progress,
 		new: e.url == $.track.url
 	});
@@ -237,7 +235,7 @@ $.next = function() {
 	var playMode = $.getPlayMode();
 	if (playMode === 'PLAYLIST') {
 		$.playlistIndex++;
-		if ($.playlistIndex >= $.playlist.length-1) {
+		if ($.playlistIndex >= $.playlist.length) {
 			$.playlistIndex = 0;
 			$.stop();
 		} else {
@@ -258,6 +256,9 @@ $.next = function() {
  */
 $.prev = function() {
 	var playMode = $.getPlayMode();
+
+	if (Musicplayer.instance.progress > 5000) $.playlistIndex++;
+
 	if (playMode === 'PLAYLIST') {
 		$.playlistIndex--;
 		if ($.playlistIndex < 0) {
@@ -289,7 +290,7 @@ $.stop = function() {
 };
 
 $.cleanup = function() {
-	$.audioPlayer.removeEventListener("progress", audioProgressHandler);
+	//$.audioPlayer.removeEventListener("progress", audioProgressHandler);
 };
 
 $.show = function() {
@@ -335,12 +336,12 @@ if (Alloy.Globals.__comcaffeinatitaniummusicplayer) {
 	});
 	Alloy.Globals.__comcaffeinatitaniummusicplayer.cleanup();
 } else {
-	$.audioPlayer = Ti.Media.createAudioPlayer({
+	/*$.audioPlayer = Ti.Media.createAudioPlayer({
 		allowBackground: true
-	});
+	});*/
 }
 
-$.audioPlayer.addEventListener("progress", audioProgressHandler);
+Event.on("musicplayer.progress", audioProgressHandler);
 setUI();
 
 Alloy.Globals.__comcaffeinatitaniummusicplayer = $;
