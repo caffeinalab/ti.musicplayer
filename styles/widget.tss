@@ -8,7 +8,7 @@
 	width: Ti.UI.FILL
 },
 ".control": {
-	width: 40,
+	width: 111,
 	height: Ti.UI.FILL,
 	right: 8
 },
@@ -17,7 +17,7 @@
 	right: 3,
 	height: Ti.UI.FILL,
 	left: 8,
-	width: "75%"
+	width: "60%"
 },
 ".track": {
 	left: 0,
@@ -66,5 +66,18 @@
 "#playBtn": {
 	width: 35,
 	height: 35,
-	image: WPATH("/images/play.png")
+	image: WPATH("/images/play.png"),
+	right: 38
+},
+"#prevBtn": {
+	width: 30,
+	height: 30,
+	image: WPATH("/images/prev.png"),
+	right: 81
+},
+"#nextBtn": {
+	right: 0,
+	width: 30,
+	height: 30,
+	image: WPATH("/images/next.png")
 }

@@ -208,6 +208,8 @@ Listeners
 */
 
 $.playBtn.addEventListener("click", function(){ $.toggle(); });
+$.prevBtn.addEventListener("click", function(){ $.prev(); });
+$.nextBtn.addEventListener("click", function(){ $.next(); });
 
 /*
 Pragma public
