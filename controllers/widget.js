@@ -239,10 +239,9 @@ $.next = function() {
 		$.playlistIndex++;
 		if ($.playlistIndex >= $.playlist.length) {
 			$.playlistIndex = 0;
-			$.stop();
-		} else {
-			$.setTrack($.playlist[ $.playlistIndex ]);
+			//$.stop();
 		}
+		$.setTrack($.playlist[ $.playlistIndex ]);
 	} else if (playMode === 'SONG') {
 		$.stop();
 	}
@@ -264,11 +263,10 @@ $.prev = function() {
 	if (playMode === 'PLAYLIST') {
 		$.playlistIndex--;
 		if ($.playlistIndex < 0) {
-			$.playlistIndex = 0;
-			$.stop();
-		} else {
-			$.setTrack($.playlist[ $.playlistIndex ]);
+			$.playlistIndex = $.playlist.length - 1;
+			//$.stop();
 		}
+		$.setTrack($.playlist[ $.playlistIndex ]);
 	} else if (playMode === 'SONG') {
 		$.stop();
 	}
