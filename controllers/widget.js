@@ -1,5 +1,7 @@
 var WNAME = 'com.caffeinalab.titanium.musicplayer';
 
+var Util = require('T/util');
+
 /*
 Pragma private
 */
