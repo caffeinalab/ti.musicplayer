@@ -37,8 +37,10 @@ function getLocalDir() {
 
 function downloadCover(progressHandler) {
 	return Q.promise(function(resolve, reject) {
-		if (isDownloadedCover()) return resolve();
-		HTTP.download($.track.cover, getLocalCover(), resolve, reject, progressHandler);
+		if (isDownloadedCover()) return resolve(getCoverNativePath());
+		HTTP.download($.track.cover, getLocalCover(), function(r) {
+			resolve(getCoverNativePath());
+		}, reject, progressHandler);
 	});
 }
 
@@ -120,13 +122,20 @@ function setInfo() {
 		if ($.track == null) {
 			nowPlaying.clear();
 		} else {
+
+			nowPlaying.setInfo({
+				artistName: $.track.artist,
+				songTitle: $.track.title,
+				albumTitle: $.track.album
+			});
+
 			downloadCover()
-			.then(function() {		
+			.then(function(u) {		
 				nowPlaying.setInfo({
 					artistName: $.track.artist,
 					songTitle: $.track.title,
 					albumTitle: $.track.album,
-					albumCover: getCoverNativePath()
+					albumCover: u
 				});
 			});
 		}
